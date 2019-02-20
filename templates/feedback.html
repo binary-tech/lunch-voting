@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+            });
+        </script>
+{% endblock %}
+{% block body %}
+        {% if action == START %}
+
+        <h2>Feedback</h2>
+
+        <form name='feedback' action="{{ formAction }}" method='POST'>
+            <p>
+                Type of feedback:<br />
+                <input type='radio' name='type' value='bug' />Bug<br />
+                <input type='radio' name='type' value='suggestion' />Suggestion<br />
+                <input type='radio' name='type' value='question' />Question<br />
+                <input type='radio' name='type' value='other' checked/>Other
+            </p>
+            <p><textarea name='text' cols='40' rows='5' placeholder='feedback'></textarea></p>
+            <p><input type='button' data-type='submit' value='Send' /></p>
+        </form>
+
+        {% elif action == THANK_USER %}
+
+        <h2>Thank you for your feedback!</h2>
+
+        {% endif %}
+{% endblock %}

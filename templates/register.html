@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+            });
+        </script>
+{% endblock %}
+{% block body %}
+        {% if action == NONE %}
+
+        <form name='register' action="{{ formAction }}" method='POST'>
+            <h1>Register</h1>
+            <p>username: <input type="text" name="username" id="username" class="text-box" size="40" /></p>
+            <p>password: <input type="password" name="password" id="password" class="text-box" size="40" /></p>
+            <p>confirm password: <input type="password" name="password" id="password" class="text-box" size="40" /></p>
+
+            <div class='control-box'>
+                <input type='button' data-type='submit' value='Submit' />
+            </div>
+        </form>
+
+        {% endif %}
+{% endblock %}
+

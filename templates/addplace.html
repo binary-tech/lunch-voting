@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Add a New Place{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+                // select the text box on page load
+                $("input[name='placeName']").focus();
+
+                // navigate back to the main page when the Cancel button is clicked
+                $("input[value='Cancel']").click(function() {
+                    window.location.href="{{ urlForVotingSpace }}";
+                });
+
+            });
+        </script>
+{% endblock %}
+{% block body %}
+        {% if action == START %}
+
+        <h1>Places Already Available</h1>
+        <ul>
+            {%for i in venueList %}
+                <li>{{ i[1] }}</li>
+            {% endfor %}
+        </ul>
+        <h1>New Place</h1>
+        <form name='addPlace' action="{{ formAction }}" method='POST'>
+            <input type="text" name="placeName" class="text-box" size="15" />
+            <br />
+            {% if closedVenues|length > 0 %}
+                <b>Places closed today: {{ closedVenues|join(", ") }}</b><br />
+            {% endif %}
+            <br />
+            The new place is open on:<br />
+            <label><input type="checkbox" name="openDaysMo" value="mo" checked>Monday</input></label>
+            <label><input type="checkbox" name="openDaysTu" value="tu" checked>Tuesday</input></label>
+            <label><input type="checkbox" name="openDaysWe" value="we" checked>Wednesday</input></label>
+            <label><input type="checkbox" name="openDaysTh" value="th" checked>Thursday</input></label>
+            <label><input type="checkbox" name="openDaysFr" value="fr" checked>Friday</input></label>
+            <label><input type="checkbox" name="openDaysSa" value="sa" checked>Saturday</input></label>
+            <label><input type="checkbox" name="openDaysSu" value="su" checked>Sunday</input></label>
+            <br />
+            <br />
+            <div class='control-box'>
+                <input type='button' value='Cancel' />
+                <input type='button' data-type='submit' value='Submit' />
+            </div>
+        </form>
+
+        {% elif action == JUST_ADDED %}
+
+        <p>New place added successfully: <b>{{ addedPlace }}</b></p>
+        <p>Please click <a href="{{ urlForVotingSpace }}">here</a> to return to the main page.</p>
+
+        {% endif %}
+{% endblock %}
+

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Add or Remove an Email{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+                $("#add-contact-btn").click(function() {
+                    $("#addemail").show("fast");
+                    $("#add-contact-btn").hide();
+                    $("input[name='addedEmail']").focus();
+                });
+
+                $("#rm-contact-btn").click(function() {
+                    $("#rmemail").show("fast");
+                    $("#rm-contact-btn").hide();
+                    $("input[name='rmedEmail']").focus();
+                });
+
+                // navigate back to the main page when the Cancel button is clicked
+                $("input[value='Cancel']").click(function() {
+                    window.location.href="{{ urlForVotingSpace }}";
+                });
+            });
+        </script>
+{% endblock %}
+{% block body %}
+        {% if action == START %}
+
+        <h3>Alerts are sent to a list of email addresses when elections become available and when results are counted. This form adds or removes email addresses from that list.</h3>
+
+        <form name='addContact' action="{{ formAction }}" method='POST'>
+            <input type="button" value="Add a New Email" id="add-contact-btn" />
+            <div id="addemail">
+                <p>Email <input type="text" name="addedEmail" class="text-box" size="23" /></p>
+                <p><label><input type='checkbox' name='tellAboutPosts' id='tellAboutPosts' checked /> email me when a new election is posted</label></p>
+                <p><label><input type='checkbox' name='tellAboutResults' id='tellAboutResults' checked /> email me when the results of an election are in</label></p>
+            </div><br />
+
+            <input type="button" value="Remove Existing Email" id="rm-contact-btn" />
+            <div id="rmemail">
+                <p>Remove email</p>
+                <input type="text" name="rmedEmail" class="text-box" size="23" />
+            </div>
+
+            <br />
+            <br />
+            <div class='control-box'>
+                <input type='button' value='Cancel' />
+                <input type='button' data-type='submit' value='Submit' />
+            </div>
+        </form>
+
+        {% elif action == ADD_CONTACT %}
+
+        <p>New email added successfully: <b>{{ addedEmail }}</b></p>
+        <p>Email when a new election is posted: {{ tellAboutPosts }}</p>
+        <p>Email when results are in: {{ tellAboutResults }}</p>
+        <p>Please click <a href="{{ urlForVotingSpace }}">here</a> to return to the main page.</p>
+
+        {% elif action == RM_CONTACT %}
+
+        <p>Email removed successfully: <b>{{ rmedEmail }}</b></p>
+        <p>Please click <a href="{{ urlForVotingSpace }}">here</a> to return to the main page.</p>
+
+        {% endif %}
+{% endblock %}

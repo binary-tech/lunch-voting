@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Admin{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+                // Hide and show controls based on what type of function is selected
+                $("#function-type").change(function() {
+                    $("[name='admin'] div").not(".control-box").hide();  // hide all divs with form controls
+                    $("#" + $(this).val()).show();   // every div has the same name as the corresponding option value
+                });
+            });
+        </script>
+{% endblock %}
+{% block body %}
+        <p style="text-align: right;">
+            {#
+            <a href="/logout">Log out</a>
+            #}
+            <a href="{{ urlForLogout }}">Log out</a>
+        </p>
+
+        {% if action == START %}
+
+        <form name='admin' action="{{ formAction }}" method='POST'>
+            <h1>Admin Functions</h1>
+            Desired function:
+            <select name="function-type" id="function-type">
+                <option value="new-election">Set up a new election</option>
+                <option value="new-message">Issue a temporary message</option>
+                <option value="send-reminders">Send new election reminders</option>
+                <option value="edit-election">Edit an existing election</option>
+                <option value="drop-election">Drop today's election</option>
+            </select>
+
+            <div id="new-election">
+                <h2>Set up a new election</h2>
+                <p>query: <input type="text" name="query" class="text-box" size="50" value="{{ query }}" /></p>
+                <p>date: <input type="text" name="date" class="text-box" size="20" value="{{ date }}" /></p>
+                <p>time: <input type="text" name="time" class="text-box" size="20" value="{{ time }}" /></p>
+            </div>
+
+            <div id="new-message" style="display: none;">
+                <h2>Make a temporary message that is seen by all users</h2>
+                <p>message: <input type="text" name="temp-message" class="text-box" size="50" /></p>
+                <p>expires in: <input type="text" name="message-exp" class="text-box" size="10" value="5 days" /></p>
+            </div>
+
+            <div id="send-reminders" style="display: none;">
+                <h2>Send out new-election reminders to all subscribed numbers</h2>
+                <p>reminder text: <input type="text" name="reminder-text" class="text-box" id="reminder-text" value="A new election is at http://whereslunch.net/s/flaglunch" size="50" /></p>
+            </div>
+
+            <div id="edit-election" style="display: none;">
+                <h2>New end time for current election</h2>
+                <p>End time: <input type="text" name="new-time" id="new-time" class="text-box" value="11:30" size="30" /></p>
+            </div>
+
+            <div id="drop-election" style="display: none;">
+                <h2>Drop today's election</h2>
+            </div>
+
+            <div class='control-box'>
+                <input type='button' data-type='submit' value='Submit' />
+            </div>
+        </form>
+
+        {% elif action == CONFIRM_ADD_ELECTION %}
+
+        <h1>New election added</h1>
+        <p>Query: {{ query }}</p>
+        <p>Date: {{ date }}</p>
+        <p>Time: {{ time }}</p>
+        <p>ID: {{ electionId }}</p>
+
+        {% elif action == CONFIRM_ADD_MESSAGE %}
+
+        <h1>New message added</h1>
+        <p>Content: {{ tmpMessage }}</p>
+        <p>Expiration: {{ messageExp }}</p>
+
+        {% elif action == CONFIRM_SEND_REMINDERS %}
+
+        <h1>Reminders have been sent out</h1>
+        <p>Content: {{ reminderText }}</p>
+        <p>Emails sent out:</p>
+        {% for i in targetEmails %}
+            <li>{{ i }}</li>
+        {% endfor %}
+
+        {% elif action == CONFIRM_EDIT_ELECTION %}
+
+        <h1>Election edited</h1>
+
+        {% elif action == CONFIRM_DROP_ELECTION %}
+
+        <h1>Election dropped</h1>
+
+        {% endif %}
+
+        <p style="text-align: right;">
+            <a href="{{ urlForAdmin }}">Configure Elections</a>
+        </p>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{# TODO: List all incoming variables available to this template #}
+
+{#
+Possible action values:
+    START
+    OFFER_NEW_SPACE
+    NO_ELECTION
+    JUST_VOTED
+    SHOW_RESULTS
+    TOO_FEW_ERROR
+#}
+
+{% block title %}Prandium{% endblock %}
+
+{% block head %}
+
+        {# automatically reload the page one second after voting closes, so that results come up #}
+        {% if secondsToClose is defined %}
+            {% if secondsToClose > 1 %}
+                <meta http-equiv="refresh" content="{{ secondsToClose }}">
+            {% endif %}
+        {% endif %}
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+                // show options that tied for first when this button is clicked
+                $("#show-options-btn").click(function() {
+                    $("#popular-options").show("fast");
+                    $("#show-options-btn").hide();
+                });
+
+                // show all votes cast when this button is clicked
+                $("#show-votes-btn").click(function() {
+                    $("#vote-list").show("fast");
+                    $("#show-votes-btn").hide();
+                });
+
+                // handle the "Add a new place" click event
+                $("a[href='add-place']").click(function(event) {
+                    event.preventDefault();
+                    window.location.href = "{{ urlForAddPlace }}";
+                });
+
+                // whenever currently selected options change, save them in cookies so that the user doesn't have to
+                // re-select each option if they navigate to another page and then come back
+                $("select[name='pref1']").change(function(event) {
+                    Cookies.set("pref1", $("select[name='pref1']").val(), {expires: 1, path: '/'});
+                });
+                $("select[name='pref2']").change(function(event) {
+                    Cookies.set("pref2", $("select[name='pref2']").val(), {expires: 1, path: '/'});
+                });
+                $("select[name='pref3']").change(function(event) {
+                    Cookies.set("pref3", $("select[name='pref3']").val(), {expires: 1, path: '/'});
+                });
+
+                // restore saved options, because the user navigated away to AddPlace or AddContact, and their options should be re-selected
+                var pref1 = Cookies.get("pref1");
+                if (pref1 != undefined) {
+                    $("select[name='pref1']").val(pref1);
+                }
+                var pref2 = Cookies.get("pref2");
+                if (pref2 != undefined) {
+                    $("select[name='pref2']").val(pref2);
+                }
+                var pref3 = Cookies.get("pref3");
+                if (pref3 != undefined) {
+                    $("select[name='pref3']").val(pref3);
+                }
+
+                // show more controls when the Edit This Vote checkbox is clicked
+                $("#editCheckbox").change(function() {
+                    if ($(this).is(":checked")) {
+                        $("[data-type='submit']").val("Edit Vote");  // make the submit button show "edit vote" instead
+                    } else {
+                        $("[type='hidden'][name='voteKey']").val(""); // if we're casting a new vote, this field must be empty
+                        Cookies.remove("vote-key", {path: '/'}); // the user is saying not to edit a vote, so blow away the cookies that suggest it on page load
+                        Cookies.remove("election-id", {path: '/'});
+                        $("[data-type='submit']").val("Submit Vote");
+                    }
+                });
+
+                // show the reminder settings when the Reminder Settings button is clicked
+                $("#reminderBtn").click(function() {
+                    window.location.href = "{{ urlForAddContact }}";
+                });
+
+                // show the list of places when the List Places button is clicked
+                $("#listPlacesBtn").click(function() {
+                    window.location.href = "{{ urlForListPlaces }}";
+                });
+
+                // show the form for starting a new election when the appropriate button is clicked
+                $("#startElectionBtn").click(function() {
+                    window.location.href = "{{ urlForStartElection }}";
+                });
+
+                // show the button that navigates to the "start a new election" form if called for
+                if ("{{ showStartElectionBtn }}" == "True") {
+                    $("#startElectionBtn").show();
+                }
+
+                // store the most recently used vote key, if available
+                var voteKey = "{{ voteKey }}";
+                var electionId = "{{ electionId }}";
+                var electionIdFromCookie = "";
+                if ("{{ action }}" == "{{ START }}") {
+                    // we're loading for the first time; look for existing vote information
+                    var voteKeyFromCookie = Cookies.get("vote-key");
+                    electionIdFromCookie = Cookies.get("election-id");
+                    if (voteKeyFromCookie != undefined && electionIdFromCookie == electionId) {
+                        voteKey = voteKeyFromCookie;
+                    }
+                } else if ("{{ action }}" == "{{ JUST_VOTED }}") {
+                    // we just voted; store vote information
+                    Cookies.set("vote-key", voteKey, {expires: 2, path: '/'});
+                    Cookies.set("election-id", electionId, {expires: 2, path: '/'}); // store the election id associated with the vote-key, so that vote keys
+                                                                            // don't cause the edit checkbox to be automatically selected after the voting has closed
+                }
+
+                // automatically fill out vote key text box if a vote key exists
+                if (voteKey != "" && electionIdFromCookie == electionId) {
+                    $("#editCheckboxP").show();
+                    $("#editCheckbox").click();
+                    $("[type='hidden'][name='voteKey']").val(voteKey);
+                }
+            });
+        </script>
+{% endblock %}
+
+{% block body %}
+    {% if action == START %}
+
+        <form name='election' action="{{ formAction }}" method='POST' autocomplete="off">
+            <h1>{{ query }}</h1>
+            <p>{{ minVoteCount }} votes needed, <span class="{{ voteCountDescClass }}">{{ voteCountDesc }}</span> cast so far</p>
+            <p>Voting closes {{ intervalToVoteClose }} ({{ voteEndReadable }})</p>
+            <p id="editCheckboxP" style="display: none;"><label><input type="checkbox" id="editCheckbox" name="editCheckbox" /> Edit the vote previously submitted on this device</label></p>
+
+            <input type="hidden" name="voteKey" />
+
+            <p><b>[ V ]</b> = Voted for by at least one person so far in this election</p>
+
+            <p>Your top three choices:</p>
+
+            {% for i in range(1, 4) %}
+                {{ i }}. <select name='pref{{ i }}'>
+                <option value="-1" selected>(no preference)</option>
+                {% for v in venueList %}
+                    <option value="{{ v[0] }}">{{ v[1] }}</option>
+                {% endfor %}
+                </select><br />
+            {% endfor %}
+
+            <div class="add-place-link">
+                <a href="add-place">+ Add a new place</a>
+            </div>
+            <br />
+            <input type='hidden' name='electionId' value='{{ electionId }}' />
+            <div class='control-box'>
+                <input type='button' data-type='submit' value='Submit Vote' />
+                <input type='button' id='reminderBtn' value='Email Alert Settings' />
+            </div>
+        </form>
+
+    {% elif action == OFFER_NEW_SPACE %}
+
+        <h2>The voting space "{{ spacestring }}" does not exist.</h2>
+
+    {% elif action == NO_ELECTION %}
+
+        <h2>An election for today has not been set up</h2>
+        <input type='button' id='startElectionBtn' value='Start a New Election for Today' style='display: none;' />
+        <br /><br />
+        <input type='button' id='reminderBtn' value='Email Alert Settings' />
+        <br /><br />
+        <input type='button' id='listPlacesBtn' value='List Places' />
+        <br /><br />
+
+    {% elif action == JUST_VOTED %}
+
+        <h2>Your top choices:</h2>
+        <ul>
+            <h3>1. {{ nameOfPref1 }} </h3>
+            <h3>2. {{ nameOfPref2 }} </h3>
+            <h3>3. {{ nameOfPref3 }} </h3>
+        </ul>
+
+        <h2>Please refresh this page after voting closes {{ intervalToVoteClose }} ({{ voteEndReadable }})</h2>
+
+    {% elif action == SHOW_RESULTS %}
+
+        <h2>Prevailing Option for "{{ query }}":</h2>
+        <br />
+        <h1>{{ overallWinner }}</h1>
+        <br />
+        <br />
+        {% if tieList|length > 1 %}
+            <input type="button" value="Show Options that Tied for 1st Place" id="show-options-btn" />
+            <div id="popular-options">
+                <h3>Tied options that the prevailing option was randomly selected from:</h3>
+                <ul>
+                {% for i in tieList %}
+                    <li>{{ i }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            <br/>
+            <br/>
+        {% endif %}
+        <input type="button" value="Show Votes Counted" id="show-votes-btn" />
+        <div id="vote-list">
+            <h3>Votes Counted</h3>
+            <table class="vote-listing">
+                {% for v in allVoteNames %}
+                <tr>
+                    <td><b>1.</b> {{ v[0] }}</td>
+                    <td><b>2.</b> {{ v[1] }}</td>
+                    <td><b>3.</b> {{ v[2] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <br /><br />
+        <input type='button' id='listPlacesBtn' value='List Places' />
+        <br /><br />
+
+    {% elif action == TOO_FEW_ERROR %}
+
+        {% if allVoteNames|length == 1 %}
+        <h1>There was only 1 vote submitted, so no meaningful result can be calculated</h1>
+        {% else %}
+        <h1>There were {{ allVoteNames|length }} votes submitted, so no meaningful result can be calculated</h1>
+        {% endif %}
+
+        {% if allVoteNames|length > 0 %}
+        <input type="button" value="Show Votes Counted" id="show-votes-btn" />
+        <div id="vote-list">
+            <h3>Votes Counted</h3>
+            <table class="vote-listing">
+                {% for v in allVoteNames %}
+                <tr>
+                    <td><b>1.</b> {{ v[0] }}</td>
+                    <td><b>2.</b> {{ v[1] }}</td>
+                    <td><b>3.</b> {{ v[2] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+        <br /><br />
+        <input type='button' id='listPlacesBtn' value='List Places' />
+        <br /><br />
+
+    {% endif %}
+
+    {# Don't include a back button in these states; there's nothing to go back to #}
+    {% if action == START or action == NO_ELECTION %}
+        <p style="text-align: right;">
+            <a href="{{ urlForAdmin }}">Configure Elections</a>
+            <a href="{{ urlForFeedback }}" target="_blank">Send Feedback</a>
+        </p>
+    {% endif %}
+
+    {# Include a back button in these states #}
+    {# TODO: No need for a back button if a new election doesn't exist in this voting space yet. How best to handle? #}
+    {% if action == JUST_VOTED or action == SHOW_RESULTS or action == TOO_FEW_ERROR %}
+        <p style="text-align: right;">
+            <a href="{{ urlForAdmin }}">Configure Elections</a>
+            <a href="{{ urlForFeedback }}" target="_blank">Send Feedback</a>
+            <a href="{{ urlForVotingSpace }}">&lt;-- Back to Main Voting Page</a>
+        </p>
+    {% endif %}
+
+{% endblock %}

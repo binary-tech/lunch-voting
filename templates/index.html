@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{# TODO: List all incoming variables available to this template #}
+
+{% block title %}Prandium{% endblock %}
+
+{% block head %}
+    <script type="text/javascript">
+    $(document).ready(function() {
+    });
+    </script>
+{% endblock %}
+
+{% block body %}
+        <h1>Voting System Home Page</h1>
+        <p>If you are looking for lunch elections in Flagstaff, please contact Travis for the new URL.</p>
+        <p style="text-align: right;">
+            <a href="{{ urlForFeedback }}" target="_blank">Send Feedback</a>
+        </p>
+{% endblock %}
+

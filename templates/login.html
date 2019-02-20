@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+                // Submit the form when the enter key is pressed in the password field
+                $("input[type='password'], input[type='text']").keyup(function(event) {
+                    if (event.keyCode == 13) {
+                        this.form.submit();
+                        return false;
+                    }
+                });
+            });
+        </script>
+        
+{% endblock %}
+{% block body %}
+        <form name='login' action="{{ formAction }}" method='POST'>
+            <h1>Log in</h1>
+            <p>username: <input type="text" name="username" id="username" class="text-box" size="23" /></p>
+            <p>password: <input type="password" name="password" id="password" class="text-box" size="23" /></p>
+            <input type="hidden" name="next" value="{{ next }}" />
+
+            <div class='control-box'>
+                <input type='button' data-type='submit' value='Submit' />
+            </div>
+        </form>
+{% endblock %}
+

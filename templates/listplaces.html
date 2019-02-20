@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}List Places{% endblock %}
+{% block head %}
+        <script type="text/javascript">
+            $(document).ready(function() {
+            });
+        </script>
+{% endblock %}
+{% block body %}
+        <h1>Places Available</h1>
+        <ul>
+            {%for i in venueList %}
+                <li>{{ i[1] }}</li>
+            {% endfor %}
+        </ul>
+        <p style="text-align: right;">
+            <a href="{{ urlForVotingSpace }}">&lt;-- Back to Main Voting Page</a>
+        </p>
+{% endblock %}
+
